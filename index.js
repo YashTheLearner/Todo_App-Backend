@@ -8,7 +8,7 @@ const JWT_SECRET = "yashtodoapp";
 const cookieParser = require('cookie-parser');
 const nodemailer = require('nodemailer');
 
-app.use(cors({ origin: 'http://localhost:5173', // Replace with your frontend URL
+app.use(cors({ origin: 'https://todo-app-two-chi-76.vercel.app/', // Replace with your frontend URL
     credentials: true // Allow credentials to be sent
     }));
 app.use(cookieParser());
@@ -51,10 +51,11 @@ app.post("/login", async (req, res) => {
   
     //   Set an HTTP-only cookie
       res.cookie('token', token, {
-        httpOnly: true,
-        secure: false,
-        // secure: process.env.NODE_ENV === 'production', // Use true in production
-      });
+            httpOnly: true, // Prevents client-side access to the cookie
+            secure: true,   // Ensures the cookie is sent over HTTPS
+            sameSite: 'None' // Allows cross-site cookie use
+          });
+          
   
     //   Respond with success
       res.status(201).json({ message: 'Logged in successfully' });
