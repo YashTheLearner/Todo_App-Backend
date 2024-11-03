@@ -14,6 +14,10 @@ app.use(cors({ origin: 'http://localhost:5173', // Replace with your frontend UR
 app.use(cookieParser());
 app.use(express.json());
 
+app.get("/", (req, res) => { 
+    res.json({message:"Welcome to the Todo App"});
+});
+
 app.post("/signup", async (req, res) => {
     const name = req.body.name;
     const email = req.body.email;
