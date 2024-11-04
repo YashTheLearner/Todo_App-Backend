@@ -8,7 +8,7 @@ const JWT_SECRET = "yashtodoapp";
 const cookieParser = require('cookie-parser');
 const nodemailer = require('nodemailer');
 
-app.use(cors({ origin: true, // Replace with your frontend URL
+app.use(cors({ origin: "https://todo-app-puce-sigma-29.vercel.app", // Replace with your frontend URL
     credentials: true // Allow credentials to be sent
     }));
 app.use(cookieParser());
