@@ -223,6 +223,7 @@ app.post("/otp", (req, res) => {
 app.post("/verify", (req, res) => {
     const userOTP = req.body.otp;
     if (userOTP === otp) {
+        otp = null;
         res.status(200).send({ message: 'OTP verified successfully' });
     } else {
         res.status(400).send({ message: 'Invalid OTP' });
@@ -230,14 +231,14 @@ app.post("/verify", (req, res) => {
 });
 
 app.post("/forgot", async (req, res) => {
-    const { email, newPassword, otp } = req.body;
+    const { email, newPassword, userOTP } = req.body;
     
-    if (otp !== generatedOtp) {
+    if (userOTP !== otp) {
         return res.status(400).json({ message: "Invalid OTP" });
     }
 
     try {
-        const result = await User.findOneAndUpdate(
+        const result = await UserModel.findOneAndUpdate(
             { email },
             { password: newPassword },
             { new: true }
@@ -246,10 +247,11 @@ app.post("/forgot", async (req, res) => {
         if (!result) {
             res.status(404).json({ message: "User not found" });
         } else {
-            generatedOtp = null; // Clear OTP after use
+            otp = null; // Clear OTP after use
             res.status(200).json({ message: "Password updated successfully" });
         }
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: "Error updating password" });
     }
 });
