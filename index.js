@@ -176,54 +176,78 @@ app.post("/logout", (req, res) => {
 
 
 
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  };
+  let otp;
+  const sendOTPEmail = async (email) => {
+    otp = generateOTP();
+    console.log('Generated OTP:', otp);
+    // Configure Nodemailer transport
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // or any other email service
+      secure: true, // For TLS
+      port: 465, // For SSL
+      auth: {
+        user: 'funcitykanha@gmail.com', // your email
+        pass: 'wkdw aahj xpcx vbgu' // your email password or app password
+      }
+    });
+  
+    // Email options
+    const mailOptions = {
+      from: 'funcitykanha@gmail.com',
+      to: email,
+      subject: 'Your OTP Code',
+      text: `Your OTP code is: ${otp}`
+    };
+  
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('OTP sent to:', email);
+      return otp; // Return the OTP to validate later
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
+  };
 
-
-app.get("/verify", (req, res) => {
-    const generateOTP = () => {
-        return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-      };
-      
-      // Function to send OTP email
-      const sendOTPEmail = async (email) => {
-        const otp = generateOTP();
-        console.log('Generated OTP:', otp);
-        // Configure Nodemailer transport
-        const transporter = nodemailer.createTransport({
-          service: 'gmail', // or any other email service
-          secure: true, // For TLS
-          port: 465, // For SSL
-          auth: {
-            user: 'funcitykanha@gmail.com', // your email
-            pass: 'wkdw aahj xpcx vbgu' // your email password or app password
-          }
-        });
-      
-        // Email options
-        const mailOptions = {
-          from: 'funcitykanha@gmail.com',
-          to: email,
-          subject: 'Your OTP Code',
-          text: `Your OTP code is: ${otp}`
-        };
-      
-        try {
-          await transporter.sendMail(mailOptions);
-          console.log('OTP sent to:', email);
-          return otp; // Return the OTP to validate later
-        } catch (error) {
-          console.error('Error sending email:', error);
-        }
-      };
-      
-      // Usage
-      const userEmail = 'mahima13patel@gmail.com';
-      sendOTPEmail(userEmail).then(otp => {
-        // Save the OTP in a database or memory for later verification
-        console.log('Generated OTP:', otp);
-        res.status(200).send({ message: 'OTP sent successfully' });
-      });
-
+app.post("/otp", (req, res) => {
+      const userEmail = req.body.email;
+      sendOTPEmail(userEmail).then(
+        res.status(200).send({ message: 'OTP sent successfully' })
+      );
 })
+
+app.post("/verify", (req, res) => {
+    const userOTP = req.body.otp;
+    if (userOTP === otp) {
+        res.status(200).send({ message: 'OTP verified successfully' });
+    } else {
+        res.status(400).send({ message: 'Invalid OTP' });
+    }
+});
+
+app.post("/forgot", async (req, res) => {
+    const email = req.body.email;
+    const newPassword = req.body.newPassword;
+    try {
+        // Step 1: Find the user by email and update the password
+        const result = await User.findOneAndUpdate(
+            { email: email },                // Find by email
+            { password: newPassword },        // Update password directly
+            { new: true }                     // Return the updated document
+        );
+
+        if (!result) {
+            console.log('User not found');
+        } else {
+            console.log('Password updated successfully');
+        }
+    } catch (error) {
+        console.error('Error updating password:', error);
+    }
+});
+
 
 function auth(req, res, next) {
     
