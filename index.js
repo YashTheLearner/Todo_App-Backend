@@ -234,7 +234,7 @@ app.put("/update",async (req, res) => {
     res.status(200).send("Task updated successfully");
 })
 
-const PORT = 3000;
+const PORT = 3000 || process.env.PORT;
 const MONGO_URI = "mongodb+srv://yashdefying:dho727rDb2ZTqoB3@cluster0.fefhf.mongodb.net/TodoApp-2";
 
 async function startServer() {
