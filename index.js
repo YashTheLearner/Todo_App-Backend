@@ -35,37 +35,63 @@ app.post("/signup", async (req, res) => {
     )
 });
 
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
-    console.log(req.body);
-    try {
-      const user = await UserModel.findOne({ email});
-      console.log(user);
-      if (!user) {
-        console.log("user not found");
-        return res.status(400).json({ message: 'Invalid credentials' });
-      }
+// app.post("/login", async (req, res) => {
+//     const { email, password } = req.body;
+//     console.log(req.body);
+//     try {
+//       const user = await UserModel.findOne({ email});
+//       console.log(user);
+//       if (!user) {
+//         console.log("user not found");
+//         return res.status(400).json({ message: 'Invalid credentials' });
+//       }
 
-      // Create a token
-      const token = jwt.sign({ id: user._id }, JWT_SECRET);
+//       // Create a token
+//       const token = jwt.sign({ id: user._id }, JWT_SECRET);
   
-    //   Set an HTTP-only cookie
-      res.cookie('token', token, {
-            httpOnly: true, // Prevents client-side access to the cookie
-            secure: true,   // Ensures the cookie is sent over HTTPS
-            sameSite: 'None' // Allows cross-site cookie use
-          });
+//     //   Set an HTTP-only cookie
+//       res.cookie('token', token, {
+//             httpOnly: true, // Prevents client-side access to the cookie
+//             secure: true,   // Ensures the cookie is sent over HTTPS
+//             sameSite: 'None' // Allows cross-site cookie use
+//           });
           
   
-    //   Respond with success
+//     //   Respond with success
+//       res.status(201).json({ message: 'Logged in successfully' });
+//     } catch (error) {
+//       res.status(500).json({ message: 'Server error' });
+//       console.error(error);
+//     }
+//   });
+  
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+          return res.status(400).json({ message: 'Invalid credentials' });
+      }
+      if (password !== user.password) {
+          return res.status(400).json({ message: 'Invalid credentials' });
+      }
+      // Create a token
+      const token = jwt.sign({ id: user._id }, JWT_SECRET);
+
+      // Set an HTTP-only cookie
+      res.cookie('token', token, {
+          httpOnly: true,        // Prevents client-side access
+          secure: process.env.NODE_ENV === 'production', // Secure only in production
+          sameSite: 'None',      // Required for cross-origin requests
+      });
+
       res.status(201).json({ message: 'Logged in successfully' });
-    } catch (error) {
+  } catch (error) {
       res.status(500).json({ message: 'Server error' });
       console.error(error);
-    }
-  });
-  
-  
+  }
+});
+
   
   
   
@@ -99,30 +125,49 @@ app.post("/login", async (req, res) => {
 //     }
 // });
 
+// app.post("/logout", (req, res) => {
+//     try {
+//         // Clear the cookie
+//         res.clearCookie('token', {
+//             httpOnly: true,   // Prevent JavaScript access
+//             secure: false,    // Set to true in production if using HTTPS
+//             // sameSite: 'Strict', // Helps mitigate CSRF attacks
+//             // path: '/',        // Ensure the cookie path matches
+//         });
+
+//         // Send a success response
+//         res.status(200).send({ message: 'Logged out successfully' });
+
+//     } catch (error) {
+//         console.error('Error during logout:', error);
+
+//         // Send a failure response with a 500 status code
+//         res.status(500).send({
+//             message: 'Logout failed',
+//             error: error.message, // Optionally include the error message
+//         });
+//     }
+// });
+
 app.post("/logout", (req, res) => {
-    try {
-        // Clear the cookie
-        res.clearCookie('token', {
-            httpOnly: true,   // Prevent JavaScript access
-            secure: false,    // Set to true in production if using HTTPS
-            // sameSite: 'Strict', // Helps mitigate CSRF attacks
-            // path: '/',        // Ensure the cookie path matches
-        });
+  try {
+      // Clear the token cookie
+      res.clearCookie('token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', // Consistent with login
+          sameSite: 'None',                              // Needed for cross-origin
+          path: '/',                                     // Ensure path consistency
+      });
 
-        // Send a success response
-        res.status(200).send({ message: 'Logged out successfully' });
-
-    } catch (error) {
-        console.error('Error during logout:', error);
-
-        // Send a failure response with a 500 status code
-        res.status(500).send({
-            message: 'Logout failed',
-            error: error.message, // Optionally include the error message
-        });
-    }
+      res.status(200).send({ message: 'Logged out successfully' });
+  } catch (error) {
+      console.error('Error during logout:', error);
+      res.status(500).send({
+          message: 'Logout failed',
+          error: error.message,
+      });
+  }
 });
-
 
 
 
@@ -171,10 +216,11 @@ app.get("/verify", (req, res) => {
       };
       
       // Usage
-      const userEmail = 'yashdefying@gmail.com';
+      const userEmail = 'mahima13patel@gmail.com';
       sendOTPEmail(userEmail).then(otp => {
         // Save the OTP in a database or memory for later verification
         console.log('Generated OTP:', otp);
+        res.status(200).send({ message: 'OTP sent successfully' });
       });
 
 })
