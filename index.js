@@ -230,26 +230,29 @@ app.post("/verify", (req, res) => {
 });
 
 app.post("/forgot", async (req, res) => {
-    const email = req.body.email;
-    const newPassword = req.body.newPassword;
+    const { email, newPassword, otp } = req.body;
+    
+    if (otp !== generatedOtp) {
+        return res.status(400).json({ message: "Invalid OTP" });
+    }
+
     try {
-        // Step 1: Find the user by email and update the password
         const result = await User.findOneAndUpdate(
-            { email: email },                // Find by email
-            { password: newPassword },        // Update password directly
-            { new: true }                     // Return the updated document
+            { email },
+            { password: newPassword },
+            { new: true }
         );
 
         if (!result) {
-            console.log('User not found');
+            res.status(404).json({ message: "User not found" });
         } else {
-            console.log('Password updated successfully');
+            generatedOtp = null; // Clear OTP after use
+            res.status(200).json({ message: "Password updated successfully" });
         }
     } catch (error) {
-        console.error('Error updating password:', error);
+        res.status(500).json({ message: "Error updating password" });
     }
 });
-
 
 function auth(req, res, next) {
     
