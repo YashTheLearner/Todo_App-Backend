@@ -19,21 +19,23 @@ app.get("/", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-    const name = req.body.name;
-    const email = req.body.email;
-    const password = req.body.password;
-    await UserModel.create({
-        name: name,
-        email: email,
-        password: password,
-    }).then((data) => {
-        console.log(data);
-        res.status(201).json({message:"login successful"});
-    }).catch((err) => {
-        res.status(500).json({message:"login failed, try again",err});
+    try {
+      const { name, email, password } = req.body;
+  
+      // Create a new user
+      await UserModel.create({ name, email, password });
+  
+      // Send OTP email
+      await sendOTPEmail(email);
+  
+      // Send success response
+      return res.status(201).json({ message: "Signup successful" });
+    } catch (err) {
+      // Send failure response
+      return res.status(500).json({ message: "Signup failed, try again", error: err.message });
     }
-    )
-});
+  });
+  
 
 // app.post("/login", async (req, res) => {
 //     const { email, password } = req.body;
